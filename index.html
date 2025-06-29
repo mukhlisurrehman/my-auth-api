@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JWT PHP API Demo</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    input, button { margin: 0.3em; padding: 0.5em; }
+    .token-box { word-break: break-word; background: #f4f4f4; padding: 1em; border-radius: 5px; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h2>PHP JWT API Demo</h2>
+
+  <div>
+    <h3>Register</h3>
+    <input type="text" id="regUsername" placeholder="Username">
+    <input type="password" id="regPassword" placeholder="Password">
+    <button onclick="register()">Register</button>
+  </div>
+
+  <div>
+    <h3>Login</h3>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div>
+    <h3>Actions</h3>
+    <button onclick="getProtected()">Call Protected API</button>
+    <button onclick="refresh()">Refresh Token</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div>
+    <h4>Access Token</h4>
+    <div class="token-box" id="tokenBox"></div>
+  </div>
+
+  <div>
+    <h4>API Response</h4>
+    <div class="token-box" id="responseBox"></div>
+  </div>
+
+<script>
+let accessToken = "";
+
+function register() {
+  fetch("http://localhost/my-auth-api/api/register.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: document.getElementById("regUsername").value,
+      password: document.getElementById("regPassword").value
+    })
+  }).then(res => res.json()).then(data => {
+    document.getElementById("responseBox").innerText = JSON.stringify(data);
+  });
+}
+
+function login() {
+  fetch("http://localhost/my-auth-api/api/login.php", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: document.getElementById("loginUsername").value,
+      password: document.getElementById("loginPassword").value
+    })
+  }).then(res => res.json()).then(data => {
+    accessToken = data.access_token;
+    document.getElementById("tokenBox").innerText = accessToken || "No token received.";
+    document.getElementById("responseBox").innerText = JSON.stringify(data);
+  });
+}
+
+function getProtected() {
+  fetch("http://localhost/my-auth-api/api/protected.php", {
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + accessToken
+    }
+  }).then(res => res.json()).then(data => {
+    document.getElementById("responseBox").innerText = JSON.stringify(data);
+  });
+}
+
+function refresh() {
+  fetch("http://localhost/my-auth-api/api/refresh.php", {
+    method: "POST",
+    credentials: "include"
+  }).then(res => res.json()).then(data => {
+    accessToken = data.access_token;
+    document.getElementById("tokenBox").innerText = accessToken || "No token received.";
+    document.getElementById("responseBox").innerText = JSON.stringify(data);
+  });
+}
+
+function logout() {
+  fetch("http://localhost/my-auth-api/api/logout.php", {
+    method: "POST",
+    credentials: "include"
+  }).then(res => res.json()).then(data => {
+    accessToken = "";
+    document.getElementById("tokenBox").innerText = "Logged out.";
+    document.getElementById("responseBox").innerText = JSON.stringify(data);
+  });
+}
+</script>
+</body>
+</html>
